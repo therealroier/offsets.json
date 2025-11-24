@@ -19,46 +19,58 @@ if not playerGui:FindFirstChild("ScreenGui") then
     G2L["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets
     G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
     G2L["1"].ResetOnSpawn = false
-    -- StarterGui.ScreenGui.mobile
-    G2L["2"] = Instance.new("LocalScript", G2L["1"])
-    G2L["2"].Name = "mobile"
 
-    -- StarterGui.ScreenGui.Value
-    G2L["3"] = Instance.new("BoolValue", G2L["1"])
+-- StarterGui.ScreenGui.mobile
+G2L["2"] = Instance.new("LocalScript", G2L["1"]);
+G2L["2"]["Name"] = [[mobile]];
 
-    -- StarterGui.ScreenGui.Frame
-    G2L["4"] = Instance.new("Frame", G2L["1"])
-    G2L["4"]["BorderSizePixel"] = 3
-    G2L["4"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0)
-    G2L["4"]["Size"] = UDim2.new(0, 394, 0, 233)
-    G2L["4"]["Position"] = UDim2.new(0.36445, 0, 0.41615, 0)
-    G2L["4"]["BorderColor3"] = Color3.fromRGB(255, 255, 255)
-    G2L["4"]["BackgroundTransparency"] = 0.3
 
-    -- StarterGui.ScreenGui.Frame.LocalScript
-    G2L["5"] = Instance.new("LocalScript", G2L["4"])
+-- StarterGui.ScreenGui.Value
+G2L["3"] = Instance.new("BoolValue", G2L["1"]);
 
-    -- StarterGui.ScreenGui.Frame.LocalScript
-    G2L["6"] = Instance.new("LocalScript", G2L["4"])
 
-    -- StarterGui.ScreenGui.Frame.UIStroke
-    G2L["7"] = Instance.new("UIStroke", G2L["4"])
-    G2L["7"]["Thickness"] = 2
-    G2L["7"]["Color"] = Color3.fromRGB(137, 137, 140)
 
-    -- StarterGui.ScreenGui.Frame.UICorner
-    G2L["8"] = Instance.new("UICorner", G2L["4"])
-    G2L["8"]["CornerRadius"] = UDim.new(0, 16)
+-- StarterGui.ScreenGui.Frame
+G2L["4"] = Instance.new("Frame", G2L["1"]);
+G2L["4"]["BorderSizePixel"] = 3;
+G2L["4"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+G2L["4"]["Size"] = UDim2.new(0, 394, 0, 233);
+G2L["4"]["Position"] = UDim2.new(0.36445, 0, 0.41615, 0);
+G2L["4"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+G2L["4"]["BackgroundTransparency"] = 0.3;
 
-    -- StarterGui.ScreenGui.Frame.Top
-    G2L["9"] = Instance.new("Frame", G2L["4"])
-    G2L["9"]["BorderSizePixel"] = 3
-    G2L["9"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0)
-    G2L["9"]["Size"] = UDim2.new(0, 393, 0, 30)
-    G2L["9"]["Position"] = UDim2.new(0.004, 0, -0.15717, 0)
-    G2L["9"]["BorderColor3"] = Color3.fromRGB(255, 255, 255)
-    G2L["9"]["Name"] = "Top"
-    G2L["9"]["BackgroundTransparency"] = 0.3
+
+-- StarterGui.ScreenGui.Frame.LocalScript
+G2L["5"] = Instance.new("LocalScript", G2L["4"]);
+
+
+
+-- StarterGui.ScreenGui.Frame.LocalScript
+G2L["6"] = Instance.new("LocalScript", G2L["4"]);
+
+
+
+-- StarterGui.ScreenGui.Frame.UIStroke
+G2L["7"] = Instance.new("UIStroke", G2L["4"]);
+G2L["7"]["Thickness"] = 2;
+G2L["7"]["Color"] = Color3.fromRGB(137, 137, 140);
+
+
+-- StarterGui.ScreenGui.Frame.UICorner
+G2L["8"] = Instance.new("UICorner", G2L["4"]);
+G2L["8"]["CornerRadius"] = UDim.new(0, 16);
+
+
+-- StarterGui.ScreenGui.Frame.Top
+G2L["9"] = Instance.new("Frame", G2L["4"]);
+G2L["9"]["BorderSizePixel"] = 3;
+G2L["9"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
+G2L["9"]["Size"] = UDim2.new(0, 393, 0, 30);
+G2L["9"]["Position"] = UDim2.new(0.004, 0, -0.15717, 0);
+G2L["9"]["BorderColor3"] = Color3.fromRGB(255, 255, 255);
+G2L["9"]["Name"] = [[Top]];
+G2L["9"]["BackgroundTransparency"] = 0.3;
+
 
 -- StarterGui.ScreenGui.Frame.Top.UIStroke
 G2L["a"] = Instance.new("UIStroke", G2L["9"]);
@@ -983,7 +995,6 @@ G2L["71"] = Instance.new("UIStroke", G2L["69"]);
 
 -- StarterGui.ScreenGui.Frame.SettingsGui.Settings.Home.ScrollingFrame.FOV.FOVConfig.FOVSet
 G2L["72"] = Instance.new("TextBox", G2L["67"]);
-G2L["72"]["CursorPosition"] = -1;
 G2L["72"]["Name"] = [[FOVSet]];
 G2L["72"]["PlaceholderColor3"] = Color3.fromRGB(169, 169, 169);
 G2L["72"]["TextWrapped"] = true;
@@ -1001,6 +1012,7 @@ G2L["72"]["BackgroundTransparency"] = 1;
 
 -- StarterGui.ScreenGui.Frame.SettingsGui.Settings.Player
 G2L["73"] = Instance.new("Frame", G2L["43"]);
+G2L["73"]["Visible"] = false;
 G2L["73"]["BorderSizePixel"] = 3;
 G2L["73"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["73"]["Size"] = UDim2.new(0, 245, 0, 178);
@@ -1396,7 +1408,6 @@ G2L["a1"]["CornerRadius"] = UDim.new(0, 16);
 G2L["a2"] = Instance.new("ScrollingFrame", G2L["9f"]);
 G2L["a2"]["Active"] = true;
 G2L["a2"]["BorderSizePixel"] = 0;
-G2L["a2"]["CanvasPosition"] = Vector2.new(0, 140);
 G2L["a2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
 G2L["a2"]["Size"] = UDim2.new(0, 225, 0, 151);
 G2L["a2"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
@@ -2189,7 +2200,6 @@ G2L["fd"]["Position"] = UDim2.new(0.04344, 0, 0.68823, 0);
 
 -- StarterGui.ScreenGui.Frame.SettingsGui.Settings.Info
 G2L["fe"] = Instance.new("Frame", G2L["43"]);
-G2L["fe"]["Visible"] = false;
 G2L["fe"]["BorderSizePixel"] = 3;
 G2L["fe"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["fe"]["Size"] = UDim2.new(0, 245, 0, 178);
@@ -5485,20 +5495,23 @@ local script = G2L["d8"];
 	local filePath = baseFolder .. "/" .. player.Name .. "_freezeScript.json"
 	
 	-- Crear carpeta si no existe
-	if makefolder and not isfolder(baseFolder) then
-		makefolder(baseFolder)
-	end
+	pcall(function()
+		if makefolder and not isfolder(baseFolder) then
+			makefolder(baseFolder)
+		end
+	end)
 	
 	-- Cargar configuración
 	local function loadConfig()
-		if isfile and isfile(filePath) then
-			local raw = readfile(filePath)
-			local success, data = pcall(function()
-				return HttpService:JSONDecode(raw)
-			end)
-			if success and type(data) == "table" then
-				return data
+		local data
+		pcall(function()
+			if isfile and isfile(filePath) then
+				local raw = readfile(filePath)
+				data = HttpService:JSONDecode(raw)
 			end
+		end)
+		if data and type(data) == "table" then
+			return data
 		end
 		return { scriptActivated = false, buttonColor = {255, 255, 255} }
 	end
@@ -5509,9 +5522,11 @@ local script = G2L["d8"];
 			scriptActivated = scriptActivated,
 			buttonColor = {button.TextColor3.R * 255, button.TextColor3.G * 255, button.TextColor3.B * 255}
 		}
-		if writefile then
-			writefile(filePath, HttpService:JSONEncode(config))
-		end
+		pcall(function()
+			if writefile then
+				writefile(filePath, HttpService:JSONEncode(config))
+			end
+		end)
 	end
 	
 	-- Cargar estado desde el archivo
