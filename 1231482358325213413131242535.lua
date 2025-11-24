@@ -13,12 +13,12 @@ end
 if not playerGui:FindFirstChild("ScreenGui") then
     local G2L = {}
 
-    -- StarterGui.ScreenGui
-    G2L["1"] = Instance.new("ScreenGui", playerGui)
-    G2L["1"]["IgnoreGuiInset"] = true
-    G2L["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets
-    G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
-    G2L["1"].ResetOnSpawn = false
+-- StarterGui.ScreenGui
+G2L["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
+G2L["1"]["IgnoreGuiInset"] = true;
+G2L["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
+G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
+
 
 -- StarterGui.ScreenGui.mobile
 G2L["2"] = Instance.new("LocalScript", G2L["1"]);
@@ -1012,7 +1012,6 @@ G2L["72"]["BackgroundTransparency"] = 1;
 
 -- StarterGui.ScreenGui.Frame.SettingsGui.Settings.Player
 G2L["73"] = Instance.new("Frame", G2L["43"]);
-G2L["73"]["Visible"] = false;
 G2L["73"]["BorderSizePixel"] = 3;
 G2L["73"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["73"]["Size"] = UDim2.new(0, 245, 0, 178);
@@ -1037,6 +1036,7 @@ G2L["75"]["CornerRadius"] = UDim.new(0, 16);
 G2L["76"] = Instance.new("ScrollingFrame", G2L["73"]);
 G2L["76"]["Active"] = true;
 G2L["76"]["BorderSizePixel"] = 0;
+G2L["76"]["CanvasPosition"] = Vector2.new(0, 205.00003);
 G2L["76"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
 G2L["76"]["Size"] = UDim2.new(0, 225, 0, 151);
 G2L["76"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
@@ -2200,6 +2200,7 @@ G2L["fd"]["Position"] = UDim2.new(0.04344, 0, 0.68823, 0);
 
 -- StarterGui.ScreenGui.Frame.SettingsGui.Settings.Info
 G2L["fe"] = Instance.new("Frame", G2L["43"]);
+G2L["fe"]["Visible"] = false;
 G2L["fe"]["BorderSizePixel"] = 3;
 G2L["fe"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
 G2L["fe"]["Size"] = UDim2.new(0, 245, 0, 178);
@@ -3602,7 +3603,7 @@ local script = G2L["8a"];
 	-- Configuración de Slow Fall
 	local config = loadConfig()
 	local isEnabled = config.slowFallEnabled or false
-	local slowFallForce = -40
+	local slowFallForce = -55
 	
 	local OFF_COLOR = Color3.fromRGB(255,255,255)
 	local ON_COLOR = Color3.fromRGB(70,130,180)
@@ -3704,13 +3705,11 @@ local script = G2L["94"];
 	local Players = game:GetService("Players")
 	local RunService = game:GetService("RunService")
 	local HttpService = game:GetService("HttpService")
+	local LocalPlayer = Players.LocalPlayer
 	
-	local player = Players.LocalPlayer
-	local button = script.Parent
-	
-	-- ================== SISTEMA DE GUARDADO EXPLOIT ==================
+	-- ================== SISTEMA DE GUARDADO ==================
 	local baseFolder = "Swihz"
-	local filePath = baseFolder .. "/" .. player.Name .. ".json"
+	local filePath = baseFolder .. "/" .. LocalPlayer.Name .. ".json"
 	
 	if makefolder and not isfolder(baseFolder) then
 		makefolder(baseFolder)
@@ -3726,39 +3725,31 @@ local script = G2L["94"];
 				return data
 			end
 		end
-		return {}
+		return {Enabled = false, RagdollDuration = 5, AntiKnockback = true}  -- Valor por defecto
 	end
 	
 	local function saveConfig(newData)
 		local current = loadConfig()
-	
 		for k,v in pairs(newData) do
-			current[k] = v  -- ✅ solo se modificará la clave correspondiente
+			current[k] = v  -- ✅ solo modificamos la clave correspondiente
 		end
 	
 		if writefile then
 			writefile(filePath, HttpService:JSONEncode(current))
 		end
 	end
-	-- ===============================================================
+	-- ======================================================
 	
-	-- Configuración de Anti Ragdoll
-	local AntiRagdollSettings = loadConfig().AntiRagdollSettings or {
-		Enabled = false,  -- Comienza apagado
-		RagdollDuration = 5,
-		AntiKnockback = true
-	}
-	
+	-- ===================== CONFIGURACIÓN DE ANTI RAGDOLL =====================
+	local AntiRagdollSettings = loadConfig()  -- Cargar configuración guardada
 	local antiRagdollConnections = {}
 	local humanoidWatchConnection = nil
-	local lastPosition = nil
-	local lastCFrame = nil
-	local ragdollActive = false
-	local ragdollTimer = nil
+	local button = script.Parent
+	local ragdollActive = AntiRagdollSettings.Enabled  -- Esto depende del valor del JSON (Enabled)
 	
 	-- Función para obtener los componentes del personaje
 	local function getCharacterComponents()
-		local char = player.Character
+		local char = LocalPlayer.Character
 		if not char then return nil, nil, nil end
 	
 		local humanoid = char:FindFirstChildOfClass("Humanoid")
@@ -3784,26 +3775,8 @@ local script = G2L["94"];
 			rootPart.Anchored = false
 		end
 	
-		if char then
-			for _, part in pairs(char:GetChildren()) do
-				if part:IsA("BasePart") then
-					for _, constraint in pairs(part:GetChildren()) do
-						if constraint:IsA("BallSocketConstraint") or 
-							constraint:IsA("HingeConstraint") then
-							constraint:Destroy()
-						end
-					end
-	
-					local motor = part:FindFirstChildWhichIsA("Motor6D")
-					if motor then
-						motor.Enabled = true
-					end
-				end
-			end
-		end
-	
 		pcall(function()
-			local controlModule = require(player.PlayerScripts.PlayerModule.ControlModule)
+			local controlModule = require(LocalPlayer.PlayerScripts.PlayerModule.ControlModule)
 			if controlModule and controlModule.Enable then
 				controlModule:Enable()
 			end
@@ -3811,24 +3784,15 @@ local script = G2L["94"];
 	
 		rootPart.Velocity = Vector3.new(0, math.min(rootPart.Velocity.Y, 0), 0)
 		rootPart.RotVelocity = Vector3.new(0, 0, 0)
-	
 		workspace.CurrentCamera.CameraSubject = humanoid
 	end
 	
 	-- Función para iniciar el temporizador del ragdoll
 	local function startRagdollTimer(char)
-		if not AntiRagdollSettings.Enabled or ragdollActive then return end
+		if not AntiRagdollSettings.Enabled then return end
 	
-		if ragdollTimer then
+		local ragdollTimer = game:GetService("RunService").Heartbeat:Connect(function()
 			ragdollTimer:Disconnect()
-			ragdollTimer = nil
-		end
-	
-		ragdollActive = true
-	
-		ragdollTimer = game:GetService("RunService").Heartbeat:Connect(function()
-			ragdollTimer:Disconnect()
-			ragdollTimer = nil
 			stopRagdoll()
 		end)
 	end
@@ -3837,29 +3801,18 @@ local script = G2L["94"];
 	local function watchHumanoidStates(char)
 		local humanoid = char:WaitForChild("Humanoid")
 	
-		if humanoidWatchConnection then
-			humanoidWatchConnection:Disconnect()
-		end
-	
-		humanoidWatchConnection = humanoid.StateChanged:Connect(function(_, newState)
+		humanoid.StateChanged:Connect(function(_, newState)
 			if AntiRagdollSettings.Enabled then
 				if newState == Enum.HumanoidStateType.FallingDown or
 					newState == Enum.HumanoidStateType.Ragdoll or
 					newState == Enum.HumanoidStateType.Physics then
-	
-					if not ragdollActive then
-						humanoid.PlatformStand = true
-						startRagdollTimer(char)
-					end
-	
+					humanoid.PlatformStand = true
+					startRagdollTimer(char)
 				elseif newState == Enum.HumanoidStateType.GettingUp or
 					newState == Enum.HumanoidStateType.Running or
 					newState == Enum.HumanoidStateType.RunningNoPhysics then
-	
 					humanoid.PlatformStand = false
-					if ragdollActive then
-						stopRagdoll()
-					end
+					stopRagdoll()
 				end
 			end
 		end)
@@ -3867,22 +3820,16 @@ local script = G2L["94"];
 	
 	-- Función para configurar el personaje
 	local function setupCharacter(char)
-		ragdollActive = false
-		if ragdollTimer then
-			ragdollTimer:Disconnect()
-			ragdollTimer = nil
-		end
-	
 		char:WaitForChild("Humanoid")
 		char:WaitForChild("HumanoidRootPart")
-	
 		watchHumanoidStates(char)
 	end
 	
 	-- Función para activar el AntiRagdoll
 	local function enableAntiRagdoll()
 		AntiRagdollSettings.Enabled = true
-		saveConfig({ AntiRagdollSettings = AntiRagdollSettings })  -- Guardar estado
+		ragdollActive = true  -- Activamos ragdollActive cuando se habilita
+		saveConfig({Enabled = true, RagdollDuration = AntiRagdollSettings.RagdollDuration, AntiKnockback = AntiRagdollSettings.AntiKnockback})  -- Guardamos el estado
 	
 		for _, connection in pairs(antiRagdollConnections) do
 			if connection and connection.Connected then
@@ -3891,11 +3838,16 @@ local script = G2L["94"];
 		end
 		table.clear(antiRagdollConnections)
 	
-		if player.Character then
-			setupCharacter(player.Character)
+		if humanoidWatchConnection then
+			humanoidWatchConnection:Disconnect()
+			humanoidWatchConnection = nil
 		end
 	
-		table.insert(antiRagdollConnections, player.CharacterAdded:Connect(function(char)
+		if LocalPlayer.Character then
+			setupCharacter(LocalPlayer.Character)
+		end
+	
+		table.insert(antiRagdollConnections, LocalPlayer.CharacterAdded:Connect(function(char)
 			setupCharacter(char)
 		end))
 	end
@@ -3903,13 +3855,8 @@ local script = G2L["94"];
 	-- Función para desactivar el AntiRagdoll
 	local function disableAntiRagdoll()
 		AntiRagdollSettings.Enabled = false
-		saveConfig({ AntiRagdollSettings = AntiRagdollSettings })  -- Guardar estado
-		ragdollActive = false
-	
-		if ragdollTimer then
-			ragdollTimer:Disconnect()
-			ragdollTimer = nil
-		end
+		ragdollActive = false  -- Desactivamos ragdollActive cuando se desactiva
+		saveConfig({Enabled = false})  -- Guardamos el estado
 	
 		for _, connection in pairs(antiRagdollConnections) do
 			if connection and connection.Connected then
@@ -3924,24 +3871,19 @@ local script = G2L["94"];
 		end
 	end
 	
-	-- Control del botón (verificando el color del texto)
+	-- Control del botón
 	button.MouseButton1Click:Connect(function()
-		-- Detectamos el color actual del texto
-		if button.TextColor3 == Color3.fromRGB(255,255,255) then
-			-- Si el color es blanco (OFF), lo cambiamos a azul (ON)
-			AntiRagdollSettings.Enabled = true
-			button.TextColor3 = Color3.fromRGB(70,130,180)  -- Color al activar (azul)
+		AntiRagdollSettings.Enabled = not AntiRagdollSettings.Enabled
+		if AntiRagdollSettings.Enabled then
 			enableAntiRagdoll()
+			button.TextColor3 = Color3.fromRGB(70,130,180)  -- Color al activar (azul)
 		else
-			-- Si el color es azul (ON), lo cambiamos a blanco (OFF)
-			AntiRagdollSettings.Enabled = false
-			button.TextColor3 = Color3.fromRGB(255,255,255)  -- Color al desactivar (blanco)
 			disableAntiRagdoll()
+			button.TextColor3 = Color3.fromRGB(255,255,255)  -- Color al desactivar (blanco)
 		end
-		saveConfig({ AntiRagdollSettings = AntiRagdollSettings })  -- Guardamos el estado de AntiRagdoll
 	end)
 	
-	-- Inicializa con el AntiRagdoll apagado (si es necesario)
+	-- Inicializa con el AntiRagdoll apagado o activado según el valor guardado
 	if AntiRagdollSettings.Enabled then
 		button.TextColor3 = Color3.fromRGB(70,130,180)  -- Si está activado, mostramos el color azul
 		enableAntiRagdoll()
@@ -3951,8 +3893,9 @@ local script = G2L["94"];
 	end
 	
 	Players.PlayerRemoving:Connect(function(p)
-		if p == player then
-			disableAntiRagdoll()
+		if p == LocalPlayer then
+			-- Si el jugador se va, se guarda el estado de ragdoll
+			saveConfig({Enabled = AntiRagdollSettings.Enabled})
 		end
 	end)
 	
@@ -3981,30 +3924,73 @@ task.spawn(C_94);
 -- StarterGui.ScreenGui.Frame.SettingsGui.Settings.Player.ScrollingFrame.Fly.TextButton.LocalScript
 local function C_99()
 local script = G2L["99"];
-	local toggleButton = script.Parent -- El botón que cambiará la visibilidad
+	local toggleButton = script.Parent  -- El botón que cambiará la visibilidad
 	local screenGui = game.Players.LocalPlayer.PlayerGui:WaitForChild("ScreenGui") -- Especifica el ScreenGui
-	local fpsFrame = screenGui:WaitForChild("SwihzFly") -- Busca el Frame llamado FpsSwihz en el ScreenGui
+	local flyFrame = screenGui:WaitForChild("SwihzFly") -- Busca el Frame llamado FpsSwihz en el ScreenGui
 	
-	local isVisible = false -- Controla el estado de la visibilidad
+	local HttpService = game:GetService("HttpService")
+	local baseFolder = "Swihz"
+	local filePathFly = baseFolder .. "/" .. game.Players.LocalPlayer.Name .. "_fly_visibility.json"  -- Archivo JSON para Fly
 	
-	-- Asegurarse de que el Frame esté oculto al inicio
-	fpsFrame.Visible = isVisible -- Esto lo inicializa en invisible
+	local isVisibleFly = false -- Controla el estado de la visibilidad para Fly
 	
-	-- Función para alternar la visibilidad del Frame
-	local function toggleVisibility()
-		isVisible = not isVisible
-		fpsFrame.Visible = isVisible -- Cambia la visibilidad
-	
-		-- Cambiar el color del botón basado en la visibilidad
-		if isVisible then
-			toggleButton.TextColor3 = Color3.fromRGB(70,130,180)  -- Verde si está visible
-		else
-			toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- Blanco si está oculto
-		end
+	-- ================== SISTEMA DE GUARDADO ==================
+	if makefolder and not isfolder(baseFolder) then
+		makefolder(baseFolder)
 	end
 	
-	-- Conectar el botón al toggle de visibilidad
-	toggleButton.MouseButton1Click:Connect(toggleVisibility)
+	local function loadVisibilityConfigFly()
+		if isfile and isfile(filePathFly) then
+			local raw = readfile(filePathFly)
+			local success, data = pcall(function()
+				return HttpService:JSONDecode(raw)
+			end)
+			if success and type(data) == "table" then
+				return data.isVisible
+			end
+		end
+		return false  -- Valor por defecto (oculto)
+	end
+	
+	local function saveVisibilityConfigFly(newData)
+		local current = { isVisible = newData }
+		if writefile then
+			writefile(filePathFly, HttpService:JSONEncode(current))
+		end
+	end
+	-- ==========================================================
+	
+	-- Cargar el estado de visibilidad de Fly desde el archivo de configuración
+	isVisibleFly = loadVisibilityConfigFly()
+	
+	-- Asegurarse de que el Frame de Fly esté oculto o visible según el estado guardado
+	flyFrame.Visible = isVisibleFly
+	
+	-- Función para alternar la visibilidad del Frame de Fly
+	local function toggleVisibilityFly()
+		isVisibleFly = not isVisibleFly
+		flyFrame.Visible = isVisibleFly -- Cambia la visibilidad
+	
+		-- Cambiar el color del botón basado en la visibilidad
+		if isVisibleFly then
+			toggleButton.TextColor3 = Color3.fromRGB(70, 130, 180)  -- Azul cuando está visible (ON)
+		else
+			toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- Blanco cuando está oculto (OFF)
+		end
+	
+		-- Guardar el nuevo estado de visibilidad de Fly
+		saveVisibilityConfigFly(isVisibleFly)
+	end
+	
+	-- Inicializar el estado de color del botón según el estado cargado para Fly
+	if isVisibleFly then
+		toggleButton.TextColor3 = Color3.fromRGB(70, 130, 180)  -- Azul cuando está visible
+	else
+		toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- Blanco cuando está oculto
+	end
+	
+	-- Conectar el botón al toggle de visibilidad de Fly
+	toggleButton.MouseButton1Click:Connect(toggleVisibilityFly)
 	
 end;
 task.spawn(C_99);
@@ -5657,14 +5643,47 @@ task.spawn(C_d8);
 -- StarterGui.ScreenGui.Frame.SettingsGui.Settings.Misc.ScrollingFrame.InstaGrab.TextButton.LocalScript
 local function C_dd()
 local script = G2L["dd"];
-	local toggleButton = script.Parent -- El botón que cambiará la visibilidad
+	local toggleButton = script.Parent  -- El botón que cambiará la visibilidad
 	local screenGui = game.Players.LocalPlayer.PlayerGui:WaitForChild("ScreenGui") -- Especifica el ScreenGui
-	local fpsFrame = screenGui:WaitForChild("SwihzInstaGrab") -- Busca el Frame llamado FpsSwihz en el ScreenGui
+	local fpsFrame = screenGui:WaitForChild("SwihzInstaGrab") -- Busca el Frame llamado SwihzInstaGrab en el ScreenGui
+	
+	local HttpService = game:GetService("HttpService")
+	local baseFolder = "Swihz"
+	local filePathInstaGrab = baseFolder .. "/" .. game.Players.LocalPlayer.Name .. "_Displayname.json"  -- Archivo JSON para la visibilidad de InstaGrab
 	
 	local isVisible = false -- Controla el estado de la visibilidad
 	
-	-- Asegurarse de que el Frame esté oculto al inicio
-	fpsFrame.Visible = isVisible -- Esto lo inicializa en invisible
+	-- ================== SISTEMA DE GUARDADO ==================
+	if makefolder and not isfolder(baseFolder) then
+		makefolder(baseFolder)
+	end
+	
+	local function loadVisibilityConfigInstaGrab()
+		if isfile and isfile(filePathInstaGrab) then
+			local raw = readfile(filePathInstaGrab)
+			local success, data = pcall(function()
+				return HttpService:JSONDecode(raw)
+			end)
+			if success and type(data) == "table" then
+				return data.isVisible
+			end
+		end
+		return false  -- Valor por defecto (oculto)
+	end
+	
+	local function saveVisibilityConfigInstaGrab(newData)
+		local current = { isVisible = newData }
+		if writefile then
+			writefile(filePathInstaGrab, HttpService:JSONEncode(current))
+		end
+	end
+	-- ==========================================================
+	
+	-- Cargar el estado de visibilidad desde el archivo de configuración
+	isVisible = loadVisibilityConfigInstaGrab()
+	
+	-- Asegurarse de que el Frame esté oculto o visible según el estado guardado
+	fpsFrame.Visible = isVisible
 	
 	-- Función para alternar la visibilidad del Frame
 	local function toggleVisibility()
@@ -5673,10 +5692,20 @@ local script = G2L["dd"];
 	
 		-- Cambiar el color del botón basado en la visibilidad
 		if isVisible then
-			toggleButton.TextColor3 = Color3.fromRGB(70,130,180)  -- Verde si está visible
+			toggleButton.TextColor3 = Color3.fromRGB(70, 130, 180)  -- Azul cuando está visible (ON)
 		else
-			toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- Blanco si está oculto
+			toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- Blanco cuando está oculto (OFF)
 		end
+	
+		-- Guardar el nuevo estado de visibilidad
+		saveVisibilityConfigInstaGrab(isVisible)
+	end
+	
+	-- Inicializar el estado de color del botón según el estado cargado
+	if isVisible then
+		toggleButton.TextColor3 = Color3.fromRGB(70, 130, 180)  -- Azul cuando está visible
+	else
+		toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)  -- Blanco cuando está oculto
 	end
 	
 	-- Conectar el botón al toggle de visibilidad
@@ -6955,9 +6984,10 @@ local script = G2L["135"];
 	local LocalPlayer = game:GetService("Players").LocalPlayer
 	local RunService = game:GetService("RunService")
 	local workspaceCam = game:GetService("Workspace").CurrentCamera  -- Asumiendo que workspaceCam es la cámara
+	local UserInputService = game:GetService("UserInputService")  -- Servicio para detectar entradas del teclado
 	
 	-- Función para alternar el estado de 'guided' y cambiar el color del botón
-	btnTeleg.MouseButton1Click:Connect(function()
+	local function toggleGuided()
 		guided = not guided  -- Alternar el estado de 'guided'
 	
 		-- Cambiar el color del texto del botón basado en el estado de 'guided'
@@ -6966,7 +6996,7 @@ local script = G2L["135"];
 		end
 	
 		-- Depuración para ver el estado de 'guided'
-		print("Estado de 'guided' después de hacer clic:", guided)
+		print("Estado de 'guided' después de alternar:", guided)
 	
 		-- Ejecutar la lógica para mover al jugador
 		if guided then
@@ -6988,6 +7018,19 @@ local script = G2L["135"];
 				gconn:Disconnect()
 				gconn = nil
 			end
+		end
+	end
+	
+	-- Activar/desactivar al hacer clic en el botón
+	btnTeleg.MouseButton1Click:Connect(function()
+		toggleGuided()
+	end)
+	
+	-- Activar/desactivar con la tecla 'V'
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end  -- Ignorar si el juego ya ha procesado la entrada (por ejemplo, si está en un cuadro de texto)
+		if input.KeyCode == Enum.KeyCode.V then
+			toggleGuided()  -- Alternar el estado de 'guided' al presionar V
 		end
 	end)
 	
