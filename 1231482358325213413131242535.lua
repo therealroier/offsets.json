@@ -19,7 +19,8 @@ G2L["1"]["IgnoreGuiInset"] = true;
 G2L["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
 G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
-
+G2L["1"].ResetOnSpawn = false
+	
 -- StarterGui.ScreenGui.mobile
 G2L["2"] = Instance.new("LocalScript", G2L["1"]);
 G2L["2"]["Name"] = [[mobile]];
@@ -1036,7 +1037,6 @@ G2L["75"]["CornerRadius"] = UDim.new(0, 16);
 G2L["76"] = Instance.new("ScrollingFrame", G2L["73"]);
 G2L["76"]["Active"] = true;
 G2L["76"]["BorderSizePixel"] = 0;
-G2L["76"]["CanvasPosition"] = Vector2.new(0, 205.00003);
 G2L["76"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
 G2L["76"]["Size"] = UDim2.new(0, 225, 0, 151);
 G2L["76"]["ScrollBarImageColor3"] = Color3.fromRGB(0, 0, 0);
@@ -3704,52 +3704,26 @@ local function C_94()
 local script = G2L["94"];
 	local Players = game:GetService("Players")
 	local RunService = game:GetService("RunService")
-	local HttpService = game:GetService("HttpService")
-	local LocalPlayer = Players.LocalPlayer
+	local player = Players.LocalPlayer
 	
-	-- ================== SISTEMA DE GUARDADO ==================
-	local baseFolder = "Swihz"
-	local filePath = baseFolder .. "/" .. LocalPlayer.Name .. ".json"
+	local AntiRagdollSettings = {
+		Enabled = false,  -- Comienza apagado
+		RagdollDuration = 5,
+		AntiKnockback = true
+	}
 	
-	if makefolder and not isfolder(baseFolder) then
-		makefolder(baseFolder)
-	end
-	
-	local function loadConfig()
-		if isfile and isfile(filePath) then
-			local raw = readfile(filePath)
-			local success, data = pcall(function()
-				return HttpService:JSONDecode(raw)
-			end)
-			if success and type(data) == "table" then
-				return data
-			end
-		end
-		return {Enabled = false, RagdollDuration = 5, AntiKnockback = true}  -- Valor por defecto
-	end
-	
-	local function saveConfig(newData)
-		local current = loadConfig()
-		for k,v in pairs(newData) do
-			current[k] = v  -- ✅ solo modificamos la clave correspondiente
-		end
-	
-		if writefile then
-			writefile(filePath, HttpService:JSONEncode(current))
-		end
-	end
-	-- ======================================================
-	
-	-- ===================== CONFIGURACIÓN DE ANTI RAGDOLL =====================
-	local AntiRagdollSettings = loadConfig()  -- Cargar configuración guardada
 	local antiRagdollConnections = {}
 	local humanoidWatchConnection = nil
-	local button = script.Parent
-	local ragdollActive = AntiRagdollSettings.Enabled  -- Esto depende del valor del JSON (Enabled)
+	local lastPosition = nil
+	local lastCFrame = nil
+	local ragdollActive = false
+	local ragdollTimer = nil
+	
+	local button = script.Parent  -- Asumimos que el botón está en el mismo script
 	
 	-- Función para obtener los componentes del personaje
 	local function getCharacterComponents()
-		local char = LocalPlayer.Character
+		local char = player.Character
 		if not char then return nil, nil, nil end
 	
 		local humanoid = char:FindFirstChildOfClass("Humanoid")
@@ -3775,8 +3749,26 @@ local script = G2L["94"];
 			rootPart.Anchored = false
 		end
 	
+		if char then
+			for _, part in pairs(char:GetChildren()) do
+				if part:IsA("BasePart") then
+					for _, constraint in pairs(part:GetChildren()) do
+						if constraint:IsA("BallSocketConstraint") or 
+							constraint:IsA("HingeConstraint") then
+							constraint:Destroy()
+						end
+					end
+	
+					local motor = part:FindFirstChildWhichIsA("Motor6D")
+					if motor then
+						motor.Enabled = true
+					end
+				end
+			end
+		end
+	
 		pcall(function()
-			local controlModule = require(LocalPlayer.PlayerScripts.PlayerModule.ControlModule)
+			local controlModule = require(player.PlayerScripts.PlayerModule.ControlModule)
 			if controlModule and controlModule.Enable then
 				controlModule:Enable()
 			end
@@ -3784,15 +3776,24 @@ local script = G2L["94"];
 	
 		rootPart.Velocity = Vector3.new(0, math.min(rootPart.Velocity.Y, 0), 0)
 		rootPart.RotVelocity = Vector3.new(0, 0, 0)
+	
 		workspace.CurrentCamera.CameraSubject = humanoid
 	end
 	
 	-- Función para iniciar el temporizador del ragdoll
 	local function startRagdollTimer(char)
-		if not AntiRagdollSettings.Enabled then return end
+		if not AntiRagdollSettings.Enabled or ragdollActive then return end
 	
-		local ragdollTimer = game:GetService("RunService").Heartbeat:Connect(function()
+		if ragdollTimer then
 			ragdollTimer:Disconnect()
+			ragdollTimer = nil
+		end
+	
+		ragdollActive = true
+	
+		ragdollTimer = game:GetService("RunService").Heartbeat:Connect(function()
+			ragdollTimer:Disconnect()
+			ragdollTimer = nil
 			stopRagdoll()
 		end)
 	end
@@ -3801,35 +3802,106 @@ local script = G2L["94"];
 	local function watchHumanoidStates(char)
 		local humanoid = char:WaitForChild("Humanoid")
 	
-		humanoid.StateChanged:Connect(function(_, newState)
+		if humanoidWatchConnection then
+			humanoidWatchConnection:Disconnect()
+		end
+	
+		humanoidWatchConnection = humanoid.StateChanged:Connect(function(_, newState)
 			if AntiRagdollSettings.Enabled then
 				if newState == Enum.HumanoidStateType.FallingDown or
 					newState == Enum.HumanoidStateType.Ragdoll or
 					newState == Enum.HumanoidStateType.Physics then
-					humanoid.PlatformStand = true
-					startRagdollTimer(char)
+	
+					if not ragdollActive then
+						humanoid.PlatformStand = true
+						startRagdollTimer(char)
+					end
+	
 				elseif newState == Enum.HumanoidStateType.GettingUp or
 					newState == Enum.HumanoidStateType.Running or
 					newState == Enum.HumanoidStateType.RunningNoPhysics then
+	
 					humanoid.PlatformStand = false
-					stopRagdoll()
+					if ragdollActive then
+						stopRagdoll()
+					end
 				end
 			end
 		end)
+	
+		table.insert(antiRagdollConnections, humanoid:GetPropertyChangedSignal("PlatformStand"):Connect(function()
+			if AntiRagdollSettings.Enabled then
+				if not ragdollActive and humanoid.PlatformStand then
+					humanoid.PlatformStand = false
+				end
+			end
+		end))
+	
+		table.insert(antiRagdollConnections, RunService.Heartbeat:Connect(function()
+			if not AntiRagdollSettings.Enabled then return end
+	
+			local char, humanoid, rootPart = getCharacterComponents()
+			if char and rootPart then
+				local currentCFrame = rootPart.CFrame
+				local currentPosition = rootPart.Position
+	
+				if ragdollActive and AntiRagdollSettings.AntiKnockback then
+					if lastPosition then
+						local positionDifference = (currentPosition - lastPosition).Magnitude
+						local velocityMagnitude = rootPart.Velocity.Magnitude
+	
+						if positionDifference > 8 and velocityMagnitude > 25 then
+							rootPart.Velocity = rootPart.Velocity * 0.7
+							rootPart.RotVelocity = rootPart.RotVelocity * 0.7
+						end
+					end
+					lastPosition = currentPosition
+					lastCFrame = currentCFrame
+				else
+					lastPosition = currentPosition
+					lastCFrame = currentCFrame
+				end
+	
+				if not ragdollActive and humanoid then
+					local currentState = humanoid:GetState()
+					if currentState == Enum.HumanoidStateType.Physics or 
+						currentState == Enum.HumanoidStateType.Ragdoll then
+						humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+						humanoid.PlatformStand = false
+					end
+				end
+			end
+		end))
 	end
 	
 	-- Función para configurar el personaje
 	local function setupCharacter(char)
+		ragdollActive = false
+		if ragdollTimer then
+			ragdollTimer:Disconnect()
+			ragdollTimer = nil
+		end
+	
 		char:WaitForChild("Humanoid")
 		char:WaitForChild("HumanoidRootPart")
+	
 		watchHumanoidStates(char)
+	
+		table.insert(antiRagdollConnections, char.ChildAdded:Connect(function(child)
+			if child:IsA("BasePart") then
+				table.insert(antiRagdollConnections, child.ChildAdded:Connect(function(constraint)
+					if not ragdollActive and (constraint:IsA("BallSocketConstraint") or 
+						constraint:IsA("HingeConstraint")) then
+						constraint:Destroy()
+					end
+				end))
+			end
+		end))
 	end
 	
 	-- Función para activar el AntiRagdoll
 	local function enableAntiRagdoll()
 		AntiRagdollSettings.Enabled = true
-		ragdollActive = true  -- Activamos ragdollActive cuando se habilita
-		saveConfig({Enabled = true, RagdollDuration = AntiRagdollSettings.RagdollDuration, AntiKnockback = AntiRagdollSettings.AntiKnockback})  -- Guardamos el estado
 	
 		for _, connection in pairs(antiRagdollConnections) do
 			if connection and connection.Connected then
@@ -3843,11 +3915,11 @@ local script = G2L["94"];
 			humanoidWatchConnection = nil
 		end
 	
-		if LocalPlayer.Character then
-			setupCharacter(LocalPlayer.Character)
+		if player.Character then
+			setupCharacter(player.Character)
 		end
 	
-		table.insert(antiRagdollConnections, LocalPlayer.CharacterAdded:Connect(function(char)
+		table.insert(antiRagdollConnections, player.CharacterAdded:Connect(function(char)
 			setupCharacter(char)
 		end))
 	end
@@ -3855,8 +3927,12 @@ local script = G2L["94"];
 	-- Función para desactivar el AntiRagdoll
 	local function disableAntiRagdoll()
 		AntiRagdollSettings.Enabled = false
-		ragdollActive = false  -- Desactivamos ragdollActive cuando se desactiva
-		saveConfig({Enabled = false})  -- Guardamos el estado
+		ragdollActive = false
+	
+		if ragdollTimer then
+			ragdollTimer:Disconnect()
+			ragdollTimer = nil
+		end
 	
 		for _, connection in pairs(antiRagdollConnections) do
 			if connection and connection.Connected then
@@ -3883,19 +3959,13 @@ local script = G2L["94"];
 		end
 	end)
 	
-	-- Inicializa con el AntiRagdoll apagado o activado según el valor guardado
-	if AntiRagdollSettings.Enabled then
-		button.TextColor3 = Color3.fromRGB(70,130,180)  -- Si está activado, mostramos el color azul
-		enableAntiRagdoll()
-	else
-		button.TextColor3 = Color3.fromRGB(255,255,255)  -- Si está apagado, mostramos el color blanco
-		disableAntiRagdoll()
-	end
+	-- Inicializa con el AntiRagdoll apagado
+	button.TextColor3 = Color3.fromRGB(255,255,255)  -- Color inicial (blanco)
+	disableAntiRagdoll()
 	
 	Players.PlayerRemoving:Connect(function(p)
-		if p == LocalPlayer then
-			-- Si el jugador se va, se guarda el estado de ragdoll
-			saveConfig({Enabled = AntiRagdollSettings.Enabled})
+		if p == player then
+			disableAntiRagdoll()
 		end
 	end)
 	
