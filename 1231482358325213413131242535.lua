@@ -1,5 +1,15 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local G2L = {};
+-- Verificar si ya existe el ScreenGui
+local existingGui = PlayerGui:FindFirstChild("Xendal")
+if existingGui then
+    return -- No hacemos nada si ya existe
+end
+
+-- Si no existe, creamos el ScreenGui
+local G2L = {}
 
 -- StarterGui.Xendal
 G2L["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
@@ -8,6 +18,7 @@ G2L["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
 G2L["1"]["Name"] = [[Xendal]];
 G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 
+G2L["1"].ResetOnSpawn = false
 
 -- StarterGui.Xendal.mobile
 G2L["2"] = Instance.new("LocalScript", G2L["1"]);
